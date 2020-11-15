@@ -1,0 +1,36 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+      {
+        "type": "TextBlock",
+        "text": "Please enter your details"
+      },
+      {
+        "type": "Input.Text",
+        "id": "firstName",
+        "placeholder": "What is your first name?"
+      },
+      {
+        "type": "Input.Text",
+        "id": "lastName",
+        "placeholder": "What is your last name?"
+      },
+      {
+        "type": "Input.Text",
+        "id": "email",
+        "placeholder": "What is your Email?"
+      }
+   
+    ],
+    "actions": [
+      {
+        "type": "Action.Submit",
+        "title": "Submit",
+        "data": {
+          "x": 13
+        }
+      }
+    ]
+  }
