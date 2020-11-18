@@ -1,19 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ActivityHandler, MessageFactory, CardFactory } from 'botbuilder';
+import { ActivityHandler, MessageFactory, CardFactory, Attachment } from 'botbuilder';
 const card = require('../resources/InputFormCard.json');
+const path = require('path');
+const fs = require('fs');
+//var correctImage = null;
+//var wrongImage = null;
 
 export class JeopardyBot extends ActivityHandler {
     private jeoQuestion: string;
     private jeoAnswer: string;
     private retry: number;
 
+    private correctImage = null;
+    private wrongImage = null;
+
     constructor() {
         super();
-
         this.jeoQuestion = '';
         this.retry = 0;
+
+        this.correctImage = this.getbase64('../resources/correct.png');
+        this.wrongImage = this.getbase64('../resources/wrong.png')
+
         // See https://aka.ms/about-bot-activity-message to learn more about the message and other activity types.
         this.onMessage(async (context, next) => {
             //const replyText = `${context.activity.text}`;
@@ -31,14 +41,35 @@ export class JeopardyBot extends ActivityHandler {
                     "body": [
                         {
                             "type": "TextBlock",
+                            "size": "Medium",
+                            "weight": "Bolder",
+                            "text": "Question"
+                        },
+                        {
+                            "type": "TextBlock",
                             "text": question[0]["question"],
+                            "separator": true,
+                            "spacing": "Medium",
                             "wrap": true,
                             "id": question[0]["id"],
                             "answer": question[0]["answer"]
                         }
                     ],
-                    "actions": []
+                    "actions": [
+                        {
+                            "type": "Action.Submit",
+                            "title": "Click me for imBack",
+                            "data": {
+                              "msteams": {
+                                  "type": "imBack",
+                                  "value": "Text to reply in chat"
+                              }
+                            }
+                        }
+                    ],
                 });
+
+               
 
                 message = MessageFactory.attachment(inputCard);
             }
@@ -60,13 +91,24 @@ export class JeopardyBot extends ActivityHandler {
 
                     message = MessageFactory.attachment(animationCard);*/
 
-                    const heroCard = CardFactory.heroCard(
-                        'You are correct',
-                        ['https://sec.ch9.ms/ch9/7ff5/e07cfef0-aa3b-40bb-9baa-7c9ef8ff7ff5/buildreactionbotframework_960.jpg'],
+                  
+                  
+                    const heroCard = CardFactory.thumbnailCard(
+                        'Correct',
+                        `${this.jeoAnswer}`,
+                        [`data:image/png;base64,${this.correctImage}`],
                         []
                    );
+
+                    /*const heroCard = CardFactory.heroCard(
+                        'Correct!',
+                        'Zeker',
+                        ['https://sec.ch9.ms/ch9/7ff5/e07cfef0-aa3b-40bb-9baa-7c9ef8ff7ff5/buildreactionbotframework_960.jpg'],
+                        []
+                   );*/
                     
                    message = MessageFactory.attachment(heroCard);
+                   //message = MessageFactory.attachment([base64Image])
                     
                     this.resetGame();
                 }
@@ -74,7 +116,16 @@ export class JeopardyBot extends ActivityHandler {
                 else {
                     this.retry += 1;
                     if (this.retry > 2) {
-                        message = MessageFactory.text(`The correct answer: ${this.jeoAnswer}`);
+
+
+                        const heroCard2 = CardFactory.thumbnailCard(
+                            'Wrong',
+                            `${this.jeoAnswer}`,
+                            [`data:image/png;base64,${this.wrongImage}`],
+                            []
+                       );
+                       message = MessageFactory.attachment(heroCard2);
+                        //message = MessageFactory.text(`The correct answer: ${this.jeoAnswer}`);
                         this.resetGame();
                     } else {
                         message = MessageFactory.text(`Try again`);
@@ -117,5 +168,11 @@ export class JeopardyBot extends ActivityHandler {
         this.retry = 0;
         this.jeoQuestion = '';
         this.jeoAnswer = '';
+    }
+
+    private getbase64(imagePath: string): string {
+        const imageData = fs.readFileSync(path.join(__dirname, imagePath));
+        const base64 = Buffer.from(imageData).toString('base64');
+        return base64;
     }
 }
